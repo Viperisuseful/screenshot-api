@@ -1,3 +1,32 @@
+/* ── Theme ─────────────────────────────────────────────────── */
+const themeToggle = document.getElementById("themeToggle");
+const themeColor = document.getElementById("themeColor");
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
+
+function applyTheme(theme, persist = true) {
+  document.documentElement.dataset.theme = theme;
+  themeColor?.setAttribute("content", theme === "dark" ? "#111512" : "#f2f0e7");
+  themeToggle?.setAttribute("aria-label", `Switch to ${theme === "dark" ? "light" : "dark"} theme`);
+  if (persist) {
+    try { localStorage.setItem("theme", theme); } catch (error) {}
+  }
+}
+
+applyTheme(currentTheme(), false);
+
+themeToggle?.addEventListener("click", () => {
+  applyTheme(currentTheme() === "dark" ? "light" : "dark");
+});
+
+window.addEventListener("storage", (event) => {
+  if (event.key === "theme" && ["light", "dark"].includes(event.newValue)) {
+    applyTheme(event.newValue, false);
+  }
+});
+
 /* ── Element refs ──────────────────────────────────────────── */
 const form              = document.getElementById("captureForm");
 const captureBtn        = document.getElementById("captureBtn");
@@ -324,7 +353,7 @@ form.addEventListener("submit", async (e) => {
 
   } catch (err) {
     downloadBtn.disabled = !latestBlob;
-    setStatus(err.message || "Something went wrong — check the URL and try again", "error");
+    setStatus(err.message || "Something went wrong. Check the URL and try again.", "error");
   } finally {
     setLoading(false);
   }
