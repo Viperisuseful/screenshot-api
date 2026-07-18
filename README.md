@@ -1,42 +1,56 @@
-# ViperCapture
+<p align="center">
+  <img src="static/vipercapture-mark.svg" width="112" height="112" alt="ViperCapture logo">
+</p>
 
-ViperCapture is an MIT-licensed webpage capture engine and browser interface.
-It loads a public URL in Chromium, performs a bounded lazy-content scroll, and
-returns a full-page PNG, JPEG, or WebP image.
+<h1 align="center">ViperCapture</h1>
 
-This public repository contains only the URL-to-image engine, local website,
-launchers, and safety controls. It intentionally does not include hosted
-accounts, API keys, quotas/credits, referrals, PayPal billing, PDF output,
-HTML/Markdown input, content extraction, cleanup automation, proxy routing, or
-deployment configuration.
+<p align="center">
+  Capture public webpages as PNG, JPEG, or WebP images with Chromium.
+</p>
+
+<p align="center">
+  <a href="https://capture.viperisuseful.cc">Hosted service</a>
+  ·
+  <a href="https://capture.viperisuseful.cc/docs">API documentation</a>
+  ·
+  <a href="docs/self-hosting.md">Self-hosting guide</a>
+</p>
+
+ViperCapture is a webpage capture engine with a browser interface and a JSON
+API. It handles full-page, viewport, and element captures without requiring you
+to manage browser automation code.
+
+This repository contains the URL-to-image engine and local interface. The
+hosted account, billing, document rendering, and deployment systems are kept in
+separate private services.
 
 ## Features
 
-- Full-page PNG, JPEG, and WebP capture with headless Chromium
-- Bounded scrolling for lazy-loaded pages
-- Phone through 4K presets plus custom viewport sizes
-- Full-page, viewport, and selector capture
-- Configurable density, JPEG/WebP quality, transparency, waits, and same-origin headers
-- Page-level challenge detection with provider, kind, confidence, and signals
-- Responsive light and dark interfaces using the same Viper blue visual system as the hosted product
-- Hosted-mode public-network validation and resource limits
-- Local Windows launcher and cross-platform Python launcher
+- PNG, JPEG, and WebP output
+- Full-page, viewport, and CSS selector capture
+- Phone, desktop, and 4K presets with custom viewport support
+- Image quality, transparent background, and device scale controls
+- Wait conditions for page events, selectors, text, and fixed delays
+- Same-origin request headers for authenticated or customized pages
+- Bounded scrolling for lazy-loaded content
+- Page-level challenge detection without CAPTCHA solving or bypassing
 
-## Run locally
+## Getting started
 
-Requirements: Python 3.11 or newer.
-
-On Windows, double-click `run.bat`. On any supported platform:
+Install [Python 3.11 or newer](https://www.python.org/downloads/), then run:
 
 ```bash
+git clone https://github.com/Viperisuseful/ViperCapture.git
+cd ViperCapture
 python launch.py
 ```
 
-The launcher creates a virtual environment, installs dependencies and
-Chromium when needed, starts the application, and opens
-`http://127.0.0.1:8000`.
+The launcher creates a virtual environment, installs the required packages and
+Chromium, starts ViperCapture, and opens `http://127.0.0.1:8000`.
 
-To install without opening the launcher:
+Windows users can double-click `run.bat` after cloning the repository.
+
+For a manual installation:
 
 ```bash
 bash install.sh
@@ -45,94 +59,81 @@ bash install.sh
   --limit-concurrency 4 --no-access-log
 ```
 
-See [`docs/self-hosting.md`](docs/self-hosting.md) for production boundaries and the exact open-source capability split.
-
 ## API
+
+Send a JSON request to `POST /v1/render`:
 
 ```bash
 curl 'http://127.0.0.1:8000/v1/render' \
   --header 'Content-Type: application/json' \
   --data '{
-    "url":"https://www.wikipedia.org",
-    "output":"webp",
-    "viewport":{"width":1280,"height":720,"device_scale_factor":1},
-    "full_page":false,
-    "selector":"main",
-    "image":{"quality":82,"transparent_background":true},
-    "wait_for":{"event":"networkidle","selector":"main","timeout_ms":15000},
-    "headers":{"X-Render-Mode":"docs"}
+    "url": "https://www.wikipedia.org",
+    "output": "webp",
+    "viewport": {
+      "width": 1280,
+      "height": 720,
+      "device_scale_factor": 1
+    },
+    "full_page": false,
+    "selector": "main",
+    "image": {
+      "quality": 82,
+      "transparent_background": true
+    },
+    "wait_for": {
+      "event": "networkidle",
+      "selector": "main",
+      "timeout_ms": 15000
+    },
+    "headers": {
+      "X-Render-Mode": "docs"
+    }
   }' \
   --output wikipedia.webp
 ```
 
-| Parameter | Default | Description |
+A successful request returns the image bytes with the matching media type.
+Every response includes `X-Request-Id`. Errors use a consistent JSON object
+with a stable code, message, request ID, retryable flag, and details.
+
+### Request options
+
+| Field | Default | Purpose |
 | --- | --- | --- |
-| `url` | required | Public page URL to capture |
+| `url` | required | Public webpage to capture |
 | `output` | `png` | `png`, `jpeg`, or `webp` |
 | `viewport` | `1280 × 720 × 1` | Width, height, and device scale factor |
 | `full_page` | `true` | Capture the full document or current viewport |
-| `selector` | empty | Capture one visible element; requires `full_page: false` |
+| `selector` | empty | Capture one visible element when `full_page` is `false` |
 | `image` | defaults | JPEG/WebP quality and PNG/WebP transparency |
-| `wait_for` | load | Ready event, selector, text, delay, and timeout |
-| `headers` | `{}` | Safe custom headers sent only to same-origin target requests |
+| `wait_for` | load | Page event, selector, text, delay, and timeout |
+| `headers` | `{}` | Headers sent only to same-origin target requests |
 
-A successful request returns the selected image media type. Detector v2 ignores
-ordinary embedded CAPTCHA form widgets, but reports page-level challenges with
-provider, kind, confidence, and detection signals. The engine does not solve or
-bypass CAPTCHAs. Every response has `X-Request-Id`; errors return a stable
-`error.code`, message, request ID, retryable flag, and details object.
+## Self-hosting
 
-## Open-source boundary
+Run one Uvicorn worker because each worker owns a Chromium process tree. Start
+with `SHOT_MAX_CONCURRENCY=1`, apply memory and CPU limits, and measure the host
+before raising browser concurrency.
 
-This repository deliberately stays useful and small: URL source only;
-PNG/JPEG/WebP output only. ViperCapture's hosted account system, private key
-storage, usage ledger, paid plans, referrals, document/PDF renderer, extraction,
-and managed cleanup are separate proprietary service code. No secrets or hosted
-database schema are required to run this project locally.
+When `SHOT_HOSTED=1` is enabled, place ViperCapture behind a rate-limited
+reverse proxy. Keep an operating-system or network egress rule that blocks
+private address ranges and cloud metadata endpoints. This is the final SSRF
+boundary.
 
-## Hosted-mode safety
+See the [self-hosting guide](docs/self-hosting.md) for the full production
+boundary and supported capability set.
 
-Set `SHOT_HOSTED=1` only behind a rate-limited reverse proxy. Hosted mode
-disables server-side file saving and desktop folder opening, and rejects
-private-network targets. Keep an OS or network egress rule blocking private
-ranges and cloud metadata endpoints as the final SSRF boundary.
+## Development
 
-Useful limits:
+Run the test suite with:
 
 ```bash
-SHOT_HOSTED=1
-SHOT_MAX_CONCURRENCY=1
-SHOT_MAX_PIXELS=50000000
+.venv/bin/python -m unittest discover
 ```
 
-Run one Uvicorn worker because each worker owns a Chromium process tree. Apply
-container or systemd memory/task limits and measure before increasing browser
-concurrency.
-
-Machine-only overrides can live in `.env.local`, which is ignored by Git.
-Never commit credentials.
-
-## Structure
-
-```text
-screenshot-api/
-├── main.py              # FastAPI app and v1 route
-├── render_contract.py   # Strict URL-to-image JSON schema
-├── render_engine.py     # Isolated Playwright image renderer
-├── render_errors.py     # Request IDs and stable errors
-├── launch.py            # Local environment and browser launcher
-├── run.bat              # Windows entry point
-├── requirements.txt
-├── templates/index.html # Browser interface
-├── static/              # Styles, JavaScript, and media
-└── test_boundary.py     # Public/private capability boundary guard
-```
-
-## Stack
-
-- FastAPI and Uvicorn
-- Playwright with headless Chromium
-- Vanilla HTML, CSS, and JavaScript
+The main components are `main.py` for the FastAPI application,
+`render_contract.py` for request validation, and `render_engine.py` for
+Playwright rendering. The local interface is in `templates/` and `static/`.
 
 ## License
 
