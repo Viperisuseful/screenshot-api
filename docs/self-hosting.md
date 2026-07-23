@@ -4,22 +4,15 @@ The public ViperCapture repository contains the MIT-licensed URL-to-image engine
 
 ## Local install
 
-Use Python 3.11 or newer, then run `python launch.py`. The launcher creates a virtual environment, installs Playwright Chromium, starts one Uvicorn worker, and opens the local interface.
-
-For a manual installation:
-
-```bash
-bash install.sh
-.venv/bin/python -m uvicorn main:app \
-  --host 127.0.0.1 --port 8000 --workers 1 \
-  --limit-concurrency 4 --no-access-log
-```
+Use Python 3.11 or newer, then run `python launch.py`. This is the supported
+setup and startup method. The launcher creates a virtual environment, installs
+Playwright Chromium, starts the application, and opens the local interface.
 
 ## Production boundaries
 
 - Put hosted mode behind a rate-limited reverse proxy.
-- Run one Uvicorn worker; every worker owns a Chromium process tree.
-- Keep `SHOT_MAX_CONCURRENCY=1` until memory and swap pressure are measured.
+- Run one application process; every process owns a Chromium process tree.
+- Keep `VIPERCAPTURE_MAX_CONCURRENCY=1` until memory and swap pressure are measured.
 - Apply container or systemd memory, PID, and CPU limits.
 - Enforce network egress rules that block private ranges and cloud metadata endpoints.
 - Do not place credentials in the repository or browser-facing JavaScript.

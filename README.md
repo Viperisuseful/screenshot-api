@@ -48,16 +48,8 @@ python launch.py
 The launcher creates a virtual environment, installs the required packages and
 Chromium, starts ViperCapture, and opens `http://127.0.0.1:8000`.
 
-Windows users can double-click `run.bat` after cloning the repository.
-
-For a manual installation:
-
-```bash
-bash install.sh
-.venv/bin/python -m uvicorn main:app \
-  --host 127.0.0.1 --port 8000 --workers 1 \
-  --limit-concurrency 4 --no-access-log
-```
+Running `python launch.py` is the supported setup and startup method on every
+platform.
 
 ## API
 
@@ -116,14 +108,14 @@ or bypass the CAPTCHA.
 
 ## Self-hosting
 
-Run one Uvicorn worker because each worker owns a Chromium process tree. Start
-with `SHOT_MAX_CONCURRENCY=1`, apply memory and CPU limits, and measure the host
-before raising browser concurrency.
+Run one application process because each process owns a Chromium process tree.
+Start with `VIPERCAPTURE_MAX_CONCURRENCY=1`, apply memory and CPU limits, and
+measure the host before raising browser concurrency.
 
-When `SHOT_HOSTED=1` is enabled, place ViperCapture behind a rate-limited
-reverse proxy. Keep an operating-system or network egress rule that blocks
-private address ranges and cloud metadata endpoints. This is the final SSRF
-boundary.
+When `VIPERCAPTURE_HOSTED=1` is enabled, place ViperCapture behind a
+rate-limited reverse proxy. Keep an operating-system or network egress rule
+that blocks private address ranges and cloud metadata endpoints. This is the
+final SSRF boundary.
 
 See the [self-hosting guide](docs/self-hosting.md) for the full production
 boundary and supported capability set.

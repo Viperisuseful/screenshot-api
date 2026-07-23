@@ -23,7 +23,6 @@ STATUS_CODES = {
 }
 STATUS_MESSAGES = {
     400: "The request is invalid.",
-    401: "A valid API key is required.",
     403: "This operation is not available for the current account.",
     404: "The requested resource was not found.",
     405: "The request method is not allowed.",

@@ -42,10 +42,14 @@ def _load_local_env() -> None:
 
 _load_local_env()
 
-HOSTED = os.getenv("SHOT_HOSTED") == "1"
-ENABLE_GPU = os.getenv("SHOT_ENABLE_GPU") == "1"
-MAX_CONCURRENT_CAPTURES = max(1, int(os.getenv("SHOT_MAX_CONCURRENCY", "1")))
-MAX_SCREENSHOT_PIXELS = max(1, int(os.getenv("SHOT_MAX_PIXELS", "50000000")))
+HOSTED = os.getenv("VIPERCAPTURE_HOSTED") == "1"
+ENABLE_GPU = os.getenv("VIPERCAPTURE_ENABLE_GPU") == "1"
+MAX_CONCURRENT_CAPTURES = max(
+    1, int(os.getenv("VIPERCAPTURE_MAX_CONCURRENCY", "1"))
+)
+MAX_SCREENSHOT_PIXELS = max(
+    1, int(os.getenv("VIPERCAPTURE_MAX_PIXELS", "50000000"))
+)
 CAPTURE_QUEUE_TIMEOUT_SECONDS = 30
 
 if not HOSTED:
@@ -296,11 +300,11 @@ if not HOSTED:
     @app.post("/open-downloads-folder")
     async def open_downloads_folder():
         downloads = Path(
-            os.getenv("SHOT_DOWNLOADS_DIR", str(Path.home() / "Downloads"))
+            os.getenv("VIPERCAPTURE_DOWNLOADS_DIR", str(Path.home() / "Downloads"))
         ).expanduser()
         try:
             if sys.platform.startswith("win"):
-                override = os.getenv("SHOT_DOWNLOADS_DIR")
+                override = os.getenv("VIPERCAPTURE_DOWNLOADS_DIR")
                 if override:
                     os.startfile(str(downloads))
                 else:
@@ -308,7 +312,7 @@ if not HOSTED:
             elif sys.platform == "darwin":
                 subprocess.Popen(["open", str(downloads)])
             else:
-                # ponytail: SHOT_DOWNLOADS_DIR covers custom browser locations.
+                # ponytail: VIPERCAPTURE_DOWNLOADS_DIR covers custom browser locations.
                 subprocess.Popen(["xdg-open", str(downloads)])
         except Exception as exc:
             raise HTTPException(status_code=500, detail="Failed to open Downloads folder") from exc
@@ -321,7 +325,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "main:app",
-        host=os.getenv("SHOT_HOST", "127.0.0.1"),
-        port=int(os.getenv("SHOT_PORT", "8000")),
+        host=os.getenv("VIPERCAPTURE_HOST", "127.0.0.1"),
+        port=int(os.getenv("VIPERCAPTURE_PORT", "8000")),
         reload=False,
     )

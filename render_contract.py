@@ -115,7 +115,3 @@ class RenderRequest(StrictModel):
     @property
     def source_type(self) -> str:
         return "url"
-
-    @property
-    def credit_cost(self) -> int:
-        return 1

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-SHOT — Screenshot Tool launcher
---------------------------------
-Run this directly with Python or via run.bat.
+ViperCapture launcher
+---------------------
+Run this file directly with Python.
 Handles venv setup, dependency install, browser install,
 server startup, and opening your browser automatically.
 
@@ -125,8 +125,8 @@ def ensure_playwright() -> None:
 
 def main() -> None:
     print()
-    print("  SHOT - Screenshot Tool")
-    print("  ----------------------")
+    print("  ViperCapture")
+    print("  ------------")
     print()
 
     ensure_venv()    # may re-exec this script under the venv Python
